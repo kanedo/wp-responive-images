@@ -5,7 +5,7 @@ Description: use the picture element for responsive images
 Plugin URI: http://blog.kanedo.net
 Author: Gabriel Bretschner
 Author URI: http://blog.kanedo.net
-Version: 1.0
+Version: 1.0.1
 License: GPL2
 Text Domain: kanedo_wp_responsive_images
 Domain Path: /
