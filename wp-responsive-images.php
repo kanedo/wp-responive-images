@@ -30,7 +30,7 @@ Domain Path: /
 */
     require_once( 'BFIGitHubPluginUploader.php' );
 
-    if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
+if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 	/**
 	* Kanedo_WP_Responsive_Images
 	*/
@@ -79,11 +79,11 @@ Domain Path: /
 		{
 			extract( shortcode_atts( array(
 				'imageid'    => 1,
-        // You can add more sizes for your shortcodes here
+       			// You can add more sizes for your shortcodes here
 				'size1' => 0,
 				'size2' => 600,
 				'size3' => 1000,
-				), $atts ) );
+			), $atts ) );
 
 			$mappings = array(
 				$size1 => 'small-img',
@@ -92,31 +92,31 @@ Domain Path: /
 				);
 
 			return
-			'<picture>
-			<!--[if IE 9]><video style="display: none;"><![endif]-->'
-			. tevkori_get_picture_srcs( $imageid, $mappings ) .
-			'<!--[if IE 9]></video><![endif]-->
-			<img srcset="' . wp_get_attachment_image_src( $imageid[0] ) . '" alt="' . tevkori_get_img_alt( $imageid ) . '">
-			<noscript>' . wp_get_attachment_image( $imageid, $mappings[0] ) . ' </noscript>
-		</picture>';
-	}
-}
+				'<picture>
+					<!--[if IE 9]><video style="display: none;"><![endif]-->'
+					. tevkori_get_picture_srcs( $imageid, $mappings ) .
+					'<!--[if IE 9]></video><![endif]-->
+					<img srcset="' . wp_get_attachment_image_src( $imageid[0] ) . '" alt="' . $this->get_image_alt( $imageid ) . '">
+					<noscript>' . wp_get_attachment_image( $imageid, $mappings[0] ) . ' </noscript>
+					</picture>';
+		}
 
-protected function get_image_alt( $image )
-{
-	$img_alt = trim( strip_tags( get_post_meta( $image, '_wp_attachment_image_alt', true ) ) );
-	return $img_alt;
-}
+		protected function get_image_alt( $image )
+		{
+			$img_alt = trim( strip_tags( get_post_meta( $image, '_wp_attachment_image_alt', true ) ) );
+			return $img_alt;
+		}
 
-protected function get_image_src_set( $image, $mappings )
-{
-	$arr = array();
-	foreach ( $mappings as $type => $size ) {
-		$image_src = wp_get_attachment_image_src( $image, $type );
-		$arr[] = '<source srcset="'. $image_src[0] . '" media="(min-width: '. $size .'px)">';
+		protected function get_image_src_set( $image, $mappings )
+		{
+			$arr = array();
+			foreach ( $mappings as $type => $size ) {
+				$image_src = wp_get_attachment_image_src( $image, $type );
+				$arr[] = '<source srcset="'. $image_src[0] . '" media="(min-width: '. $size .'px)">';
+			}
+			return implode( array_reverse ( $arr ) );
+		}
 	}
-	return implode( array_reverse ( $arr ) );
-}
-}
-$kanedo_wp_responsive_images = new Kanedo_WP_Responsive_Images();
+	
+	$kanedo_wp_responsive_images = new Kanedo_WP_Responsive_Images();
 }
