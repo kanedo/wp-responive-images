@@ -55,6 +55,8 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 
 		/**
 		 * returns the scale factors
+		 * filter with 'kanedo_responsive_image_scales'
+		 * @uses apply_filters 
 		 * @return array
 		 **/
 		public function get_scale_factors(){
