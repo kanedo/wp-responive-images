@@ -73,7 +73,6 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 					}
 				}
 			}
-			var_dump(get_intermediate_image_sizes());
 		}
 
 		protected function get_image_sizes( $size = '' ) {
