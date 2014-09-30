@@ -85,7 +85,7 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 		 **/ 
 		public function register_javascript()
 		{
-			wp_register_script( 'picturefill', plugin_dir_url(__DIR__)."/assets/js/picturefill.min.js");
+			wp_register_script( 'picturefill', plugin_dir_url(__FILE__)."assets/js/picturefill.min.js");
 			wp_enqueue_script('picturefill' );
 		}
 
