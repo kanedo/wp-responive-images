@@ -41,5 +41,8 @@ use it like this:
 it'll be inserted when using the wordpress media picker
 
 ## changelog
+### Version 1.0.1 (2014-09-30)
+- fix JS Asset Path
+
 ### Version 1.0 ( 2014-09-30 )
 - initial release

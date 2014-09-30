@@ -5,7 +5,7 @@ Description: use the picture element for responsive images
 Plugin URI: http://blog.kanedo.net
 Author: Gabriel Bretschner
 Author URI: http://blog.kanedo.net
-Version: 1.0
+Version: 1.0.1
 License: GPL2
 Text Domain: kanedo_wp_responsive_images
 Domain Path: /
@@ -85,7 +85,7 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 		 **/ 
 		public function register_javascript()
 		{
-			wp_register_script( 'picturefill', plugin_dir_url(__DIR__)."/assets/js/picturefill.min.js");
+			wp_register_script( 'picturefill', plugin_dir_url(__FILE__)."assets/js/picturefill.min.js");
 			wp_enqueue_script('picturefill' );
 		}
 
