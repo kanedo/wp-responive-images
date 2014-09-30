@@ -37,24 +37,25 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 	class Kanedo_WP_Responsive_Images
 	{
 		
-		function __construct(argument)
+		function __construct()
 		{
 			add_action( 'wp_enqueue_scripts', array($this, 'register_javascript') );
+			add_filter('image_send_to_editor', array($this, 'send_to_editor'), 10, 9);
+			add_filter('post_thumbnail_html', array($this, 'filter_post_thumbnail'), 10, 9);
+			add_action('init', array($this, 'register_image_sizes'), 100);
+
 			$this->register_github_updater();
+			$this->register_shortcode();
+		}
+
+		public function get_scale_factors(){
+			return array(2, 3);
 		}
 
 		public function register_github_updater(){
 			if ( is_admin() ) {
 				new BFIGitHubPluginUpdater( __FILE__, 'kanedo', "wp-responive-images" );
 			}
-		}
-
-		protected function get_image_sizes(){
-			return array(
-				'large-img-2x'	=> 2048,
-				'medium-img-2x'	=> 600,
-				'small-img-2x'	=> 300
-				);
 		}
 
 		public function register_javascript()
@@ -65,56 +66,125 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 
 		public function register_image_sizes()
 		{
-			foreach ($this->get_image_sizes() as $img_name => $size) {
-				add_image_size( $img_name, $size );
+			foreach (get_intermediate_image_sizes() as $size) {
+				if( !preg_match("/\-\d+x/", $size)){
+					foreach ($this->get_scale_factors() as $scale) {
+						$this->register_scaled_image_size($size, $scale);
+					}
+				}
+			}
+			var_dump(get_intermediate_image_sizes());
+		}
+
+		protected function get_image_sizes( $size = '' ) {
+
+	        global $_wp_additional_image_sizes;
+
+	        $sizes = array();
+	        $get_intermediate_image_sizes = get_intermediate_image_sizes();
+
+	        // Create the full array with sizes and crop info
+	        foreach( $get_intermediate_image_sizes as $_size ) {
+
+	                if ( in_array( $_size, array( 'thumbnail', 'medium', 'large' ) ) ) {
+
+	                        $sizes[ $_size ]['width'] = get_option( $_size . '_size_w' );
+	                        $sizes[ $_size ]['height'] = get_option( $_size . '_size_h' );
+	                        $sizes[ $_size ]['crop'] = (bool) get_option( $_size . '_crop' );
+
+	                } elseif ( isset( $_wp_additional_image_sizes[ $_size ] ) ) {
+
+	                        $sizes[ $_size ] = array( 
+	                                'width' => $_wp_additional_image_sizes[ $_size ]['width'],
+	                                'height' => $_wp_additional_image_sizes[ $_size ]['height'],
+	                                'crop' =>  $_wp_additional_image_sizes[ $_size ]['crop']
+	                        );
+
+	                }
+
+	        }
+
+	        // Get only 1 size if found
+	        if ( $size ) {
+
+	                if( isset( $sizes[ $size ] ) ) {
+	                        return $sizes[ $size ];
+	                } else {
+	                        return false;
+	                }
+
+	        }
+
+	        return $sizes;
+		}
+
+		protected function register_scaled_image_size( $size, $scale ){
+			$image_size = $this->get_image_sizes( $size );
+			if( array_key_exists('width', $image_size) 
+				&& array_key_exists('height', $image_size)
+				&& array_key_exists('crop', $image_size)){
+				add_image_size( $size."-{$scale}x", $image_size['width'] * $scale, $image_size['height'] * $scale, $image_size['crop'] );
 			}
 		}
 
 		public function register_shortcode()
 		{
-			# code...
+			add_shortcode( 'responsive_image', array($this, 'do_shortcode') );
+		}
+
+		public function send_to_editor( $html, $id, $caption, $title, $align, $url, $size, $alt )
+		{
+			return "[responsive_image id='{$id}' size='{$size}' alt='{$alt}' align='{$align}']";
 		}
 
 		public function do_shortcode( $attr )
 		{
 			extract( shortcode_atts( array(
-				'imageid'    => 1,
+				'id'    => 1,
        			// You can add more sizes for your shortcodes here
-				'size1' => 0,
-				'size2' => 600,
-				'size3' => 1000,
-			), $atts ) );
-
-			$mappings = array(
-				$size1 => 'small-img',
-				$size2 => 'medium-img',
-				$size3 => 'large-img'
-				);
-
-			return
-				'<picture>
-					<!--[if IE 9]><video style="display: none;"><![endif]-->'
-					. tevkori_get_picture_srcs( $imageid, $mappings ) .
-					'<!--[if IE 9]></video><![endif]-->
-					<img srcset="' . wp_get_attachment_image_src( $imageid[0] ) . '" alt="' . $this->get_image_alt( $imageid ) . '">
-					<noscript>' . wp_get_attachment_image( $imageid, $mappings[0] ) . ' </noscript>
-					</picture>';
+				'size' 	=> 'full',
+				'alt'	=> '',
+				'align' => 'none'	
+			), $attr ) );
+			return $this->get_img_tag( $id, $alt, $size, $align );
 		}
 
-		protected function get_image_alt( $image )
-		{
-			$img_alt = trim( strip_tags( get_post_meta( $image, '_wp_attachment_image_alt', true ) ) );
-			return $img_alt;
-		}
-
-		protected function get_image_src_set( $image, $mappings )
-		{
-			$arr = array();
-			foreach ( $mappings as $type => $size ) {
-				$image_src = wp_get_attachment_image_src( $image, $type );
-				$arr[] = '<source srcset="'. $image_src[0] . '" media="(min-width: '. $size .'px)">';
+		public function filter_post_thumbnail( $html, $post_id, $post_thumbnail_id, $size, $attr ){
+			if( empty($html) ){
+				return $html;
 			}
-			return implode( array_reverse ( $arr ) );
+			$this->get_image_sizes();
+			return $this->get_img_tag( $post_thumbnail_id, '', $size);
+		}
+
+		public function get_img_tag( $id, $alt, $size, $align = '')
+		{
+			$srcset = $this->get_image_src_set( $id, $size );
+			$align = (empty($align))?'':"align{$align}";
+			$srcset_string = $this->get_src_set_string( $this->get_image_src_set( $id, $size ) );
+			return "<img src='{$srcset['1x']}' alt='{$alt}' srcset='{$srcset_string}' class='{$align} size-{$size} {$size} wp-image-{$id}' />";
+		}
+
+		protected function get_src_set_string( $srcset ){
+			$srcset_string = array();
+			foreach ($srcset as $key => $value) {
+				$srcset_string[] = "{$value} {$key}";	
+			}
+			return implode(', ', $srcset_string);
+		}
+
+		protected function get_image_src_set( $image, $size )
+		{		
+			$set = array();
+			$sizes = array( "1x" => $size);
+			foreach ($this->get_scale_factors() as $scale) {
+				$sizes[$scale."x"] = $size."-{$scale}x";
+			}
+			foreach ($sizes as $scale => $size) {
+				$wp_image = wp_get_attachment_image_src( $image, $size );
+				$set[$scale] = $wp_image[0];
+			}
+			return $set;		
 		}
 	}
 	
