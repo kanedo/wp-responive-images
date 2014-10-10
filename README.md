@@ -31,7 +31,7 @@ the plugin provides a shortcode `responsive_image` which has 4 attributes:
 'size' 	=> 'full', // the image size
 'alt'	=> '', // the alt text
 'align' => 'none' // the alignment
-```	
+```
 
 use it like this:
 ```
@@ -41,6 +41,9 @@ use it like this:
 it'll be inserted when using the wordpress media picker
 
 ## changelog
+### Version 1.1
+- be aware of possible anchor elements an image is wrapped in
+
 ### Version 1.0.1 (2014-09-30)
 - fix JS Asset Path
 
