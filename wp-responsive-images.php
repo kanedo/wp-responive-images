@@ -56,7 +56,7 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 		/**
 		 * returns the scale factors
 		 * filter with 'kanedo_responsive_image_scales'
-		 * @uses apply_filters 
+		 * @uses apply_filters
 		 * @return array
 		 **/
 		public function get_scale_factors(){
@@ -82,7 +82,7 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 		 * @uses wp_register_script
 		 * @uses wp_enqueue_script
 		 * @uses plugin_dir_url
-		 **/ 
+		 **/
 		public function register_javascript()
 		{
 			wp_register_script( 'picturefill', plugin_dir_url(__FILE__)."assets/js/picturefill.min.js");
@@ -94,7 +94,7 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 		 * only for imagesizes that doesn't match the pattern /\-\d+x/ (e.g. foo-2x)
 		 * @see self::get_scale_factors
 		 * @uses get_intermediate_image_sizes()
-		 **/ 
+		 **/
 		public function register_image_sizes()
 		{
 			foreach (get_intermediate_image_sizes() as $size) {
@@ -108,7 +108,7 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 
 		/**
 		 * returns properties of image sizes. if no attribute is given all image sizes are returned
-		 * @param string $size 
+		 * @param string $size
 		 * @uses get_intermediate_image_sizes
 		 * @uses get_option
 		 * @return array
@@ -131,7 +131,7 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 
 	                } elseif ( isset( $_wp_additional_image_sizes[ $_size ] ) ) {
 
-	                        $sizes[ $_size ] = array( 
+	                        $sizes[ $_size ] = array(
 	                                'width' => $_wp_additional_image_sizes[ $_size ]['width'],
 	                                'height' => $_wp_additional_image_sizes[ $_size ]['height'],
 	                                'crop' =>  $_wp_additional_image_sizes[ $_size ]['crop']
@@ -163,7 +163,7 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 		 **/
 		protected function register_scaled_image_size( $size, $scale ){
 			$image_size = $this->get_image_sizes( $size );
-			if( array_key_exists('width', $image_size) 
+			if( array_key_exists('width', $image_size)
 				&& array_key_exists('height', $image_size)
 				&& array_key_exists('crop', $image_size)){
 				add_image_size( $size."-{$scale}x", $image_size['width'] * $scale, $image_size['height'] * $scale, $image_size['crop'] );
@@ -173,7 +173,7 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 		/**
 		 * register shortcode 'responsive_image'
 		 * @uses add_shortcode
-		 **/ 
+		 **/
 		public function register_shortcode()
 		{
 			add_shortcode( 'responsive_image', array($this, 'do_shortcode') );
@@ -182,10 +182,14 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 		/**
 		 * filter the send_to_editor action
 		 * @return string
-		 **/ 
+		 **/
 		public function send_to_editor( $html, $id, $caption, $title, $align, $url, $size, $alt )
 		{
-			return "[responsive_image id='{$id}' size='{$size}' alt='{$alt}' align='{$align}']";
+      $shortcode = "[responsive_image id='{$id}' size='{$size}' alt='{$alt}' align='{$align}']";
+      if(preg_match( '/[^<]*(<a href="([^"]+)">.*([^<]+)<\/a>)/', $html) > 0){
+        return "<a href=\"{$url}\">". $shortcode . "</a>";
+      }
+			return $shortcode;
 		}
 
 		/**
@@ -193,7 +197,7 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 		 * @param array $attr
 		 * @uses shortcode_atts
 		 * @return string
-		 **/ 
+		 **/
 		public function do_shortcode( $attr )
 		{
 			extract( shortcode_atts( array(
@@ -201,20 +205,20 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
        			// You can add more sizes for your shortcodes here
 				'size' 	=> 'full',
 				'alt'	=> '',
-				'align' => 'none'	
+				'align' => 'none'
 			), $attr ) );
 			return $this->get_img_tag( $id, $alt, $size, $align );
 		}
 
 		/**
-		 * filter the post_Thumbnail 
+		 * filter the post_Thumbnail
 		 * @param string $html
 		 * @param int $post_id
 		 * @param int $post_thumbnail_id
 		 * @param string $size
 		 * @param string $attr
 		 * @return string
-		 **/ 
+		 **/
 		public function filter_post_thumbnail( $html, $post_id, $post_thumbnail_id, $size, $attr ){
 			if( empty($html) ){
 				return $html;
@@ -229,7 +233,7 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 		 * @param string $size
 		 * @param string $align (default '')
 		 * @return string
-		 **/ 
+		 **/
 		public function get_img_tag( $id, $alt, $size, $align = '')
 		{
 			$srcset = $this->get_image_src_set( $id, $size );
@@ -242,24 +246,24 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 		 * transform an array of hidpi images into an html srcset string
 		 * @param array $srcset
 		 * @return string
-		 **/ 
+		 **/
 		protected function get_src_set_string( $srcset ){
 			$srcset_string = array();
 			foreach ($srcset as $key => $value) {
-				$srcset_string[] = "{$value} {$key}";	
+				$srcset_string[] = "{$value} {$key}";
 			}
 			return implode(', ', $srcset_string);
 		}
 
 		/**
-		 * returns an array with all scaled images 
+		 * returns an array with all scaled images
 		 * @param int $image the image id
 		 * @param strin $size
 		 * @uses wp_get_attachment_image_src
 		 * @return array an array [1x => '...', 2x => '...', ...]
-		 **/ 
+		 **/
 		protected function get_image_src_set( $image, $size )
-		{		
+		{
 			$set = array();
 			$sizes = array( "1x" => $size);
 			foreach ($this->get_scale_factors() as $scale) {
@@ -269,9 +273,9 @@ if ( !class_exists( "Kanedo_WP_Responsive_Images" )) {
 				$wp_image = wp_get_attachment_image_src( $image, $size );
 				$set[$scale] = $wp_image[0];
 			}
-			return $set;		
+			return $set;
 		}
 	}
-	
+
 	$kanedo_wp_responsive_images = new Kanedo_WP_Responsive_Images();
 }
