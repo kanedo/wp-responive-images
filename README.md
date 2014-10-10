@@ -16,7 +16,7 @@ e.g.
 function custom_scales( $scales ){
 	return array(2,3,4);
 }
-add_filter( 'kanedo_responsive_image_scales', custom_scales);
+add_filter( 'kanedo_responsive_image_scales', 'custom_scales');
 ```
 to generate thumbnails for `1x`, `2x`, `3x` and `4x`. Default is `1x`, `2x`, `3x`
 
